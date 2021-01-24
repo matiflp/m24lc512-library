@@ -22,7 +22,7 @@ void M24LC512_initPort(void)
 
     // Configure USCI_B0 for I2 mode - Sending
     UCB0CTLW0 |= UCSWRST;
-    UCB0CTLW0 |= UCMST | UCMODE_3 | UCSYNC | UCSSEL__SMCLK; // I2C mode, master, sync, sending, SMCLK
+    UCB0CTLW0 |= UCMST | UCMODE_3 | UCSYNC | UCSSEL__SMCLK;        // I2C mode, master, sync, sending, SMCLK
 
     UCB0BRW = M24LC512_PIN_SCL_CLOCK_DIV;                          // SMCLK / 10 = 100 KHz; Bit clock prescaler. Modify only when UCSWRST = 1.
 
@@ -43,16 +43,16 @@ static void M24LC512_initWrite(void)
 {
   UCB0CTLW0 |= UCTR;                        // UCTR=1 => Transmit Mode (R/W bit = 0)
   UCB0IFG &= ~UCTXIFG0;
-  UCB0IE &= ~UCRXIE0;                        // disable Receive ready interrupt
-  UCB0IE |= UCTXIE0 | UCSTTIE | UCSTPIE;                         // enable Transmit ready interrupt
+  UCB0IE &= ~UCRXIE0;                       // disable Receive ready interrupt
+  UCB0IE |= (UCTXIE0 | UCSTPIE);            // enable Transmit ready interrupt
 }
 //**********************************************************************************************************************************************************
 static void M24LC512_initRead(void)
 {
-  UCB0CTLW0 &= ~UCTR;                         // UCTR=0 => Receive Mode (R/W bit = 1)
+  UCB0CTLW0 &= ~UCTR;                       // UCTR=0 => Receive Mode (R/W bit = 1)
   UCB0IFG &= ~(UCRXIFG0 | UCSTPIFG);
-  UCB0IE &= ~(UCTXIE0 | UCSTPIE | UCSTTIE);    // disable Transmit ready interrupt
-  UCB0IE |= UCRXIE0;                          // enable Receive ready interrupt
+  UCB0IE &= ~(UCTXIE0 | UCSTPIE);           // disable Transmit ready interrupt
+  UCB0IE |= UCRXIE0;                        // enable Receive ready interrupt
 }
 //**********************************************************************************************************************************************************
 void M24LC512_byteWrite(const uint16_t Address, const uint8_t Data)
@@ -80,7 +80,7 @@ void M24LC512_byteWrite(const uint16_t Address, const uint8_t Data)
     UCB0CTLW0 |= UCTXSTP;                      // I2C stop condition
     __bis_SR_register(LPM3_bits + GIE);
 
-    UCB0IE &= ~(UCTXIE0 | UCSTPIE | UCSTTIE);    // disable Transmit ready interrupt
+    UCB0IE &= ~(UCTXIE0 | UCSTPIE);    // disable Transmit ready interrupt
 }
 //**********************************************************************************************************************************************************
 void M24LC512_pageWrite(uint16_t* StartAddress, uint8_t *Data, const uint16_t Size)
@@ -168,7 +168,7 @@ void M24LC512_pageWrite(uint16_t* StartAddress, uint8_t *Data, const uint16_t Si
 
         for(i = counterI2cBuffer ; i > index ; i--)
         {
-            UCB0TXBUF = Data[(index + counterI2cBuffer) - i];   // Load TX buffer
+            UCB0TXBUF = Data[(index + counterI2cBuffer) - i];       // Load TX buffer
             __bis_SR_register(LPM3_bits + GIE);
         }
 
@@ -178,7 +178,7 @@ void M24LC512_pageWrite(uint16_t* StartAddress, uint8_t *Data, const uint16_t Si
         M24LC512_ackPolling();                                      // Ensure data is written in EEPROM
     }
 
-    UCB0IE &= ~(UCTXIE0 | UCSTPIE | UCSTTIE);    // disable Transmit ready interrupt
+    UCB0IE &= ~(UCTXIE0 | UCSTPIE);                                 // disable Transmit ready interrupt
     *StartAddress = currentAddress;
 }
 //**********************************************************************************************************************************************************
@@ -189,10 +189,12 @@ unsigned char M24LC512_currentRead(void)
     // Read Data byte
     M24LC512_initRead();
 
-    UCB0CTLW0 |= UCTXSTT;                       // I2C start condition
     UCB0CTLW0 |= UCTXSTP;
-    temp = UCB0RXBUF;
+
+    UCB0CTLW0 |= UCTXSTT;                       // I2C start condition
     __bis_SR_register(LPM3_bits + GIE);         // Enter LPM0 w/ interrupts
+
+    temp = UCB0RXBUF;
 
     UCB0IE |= UCSTPIE;
     __bis_SR_register(LPM3_bits + GIE);         // Enter LPM0 w/ interrupts
@@ -206,10 +208,10 @@ uint8_t M24LC512_randomRead(const uint16_t Address)
 {
     uint8_t adr_hi;
     uint8_t adr_lo;
-    volatile uint8_t temp, aux;
+    volatile uint8_t temp = 0, aux = 0;
 
     adr_hi = Address >> 8;                      // calculate high byte
-    adr_lo = Address & 0x00FF;                    // and low byte of address
+    adr_lo = Address & 0x00FF;                  // and low byte of address
 
     // Write Address first
     M24LC512_initWrite();
@@ -229,10 +231,12 @@ uint8_t M24LC512_randomRead(const uint16_t Address)
     // Read Data byte
     M24LC512_initRead();
 
-    UCB0CTLW0 |= UCTXSTT;                       // I2C start condition
     UCB0CTLW0 |= UCTXSTP;
-    temp = UCB0RXBUF;
+
+    UCB0CTLW0 |= UCTXSTT;                       // I2C start condition
     __bis_SR_register(LPM3_bits + GIE);         // Enter LPM0 w/ interrupts
+
+    temp = UCB0RXBUF;
 
     UCB0IE |= UCSTPIE;
     __bis_SR_register(LPM3_bits + GIE);         // Enter LPM0 w/ interrupts
@@ -257,7 +261,6 @@ void M24LC512_sequentialRead(uint16_t Address , uint8_t *Data , uint16_t Size)
     UCB0CTLW0 |= UCTXSTT;                       // start condition generation
     __bis_SR_register(LPM3_bits + GIE);         // => I2C communication is started
                                                 // Enter LPM0 w/ interrupts
-
     UCB0TXBUF = adr_hi;                         // Load TX buffer
     __bis_SR_register(LPM3_bits + GIE);
 
@@ -272,15 +275,19 @@ void M24LC512_sequentialRead(uint16_t Address , uint8_t *Data , uint16_t Size)
 
     UCB0CTLW0 |= UCTXSTT;                       // I2C start condition
 
-    for(counterSize = (Size-1) ; counterSize > 0  ; counterSize--)
+    for(counterSize = (Size-2) ; counterSize > 0  ; counterSize--)
     {
         __bis_SR_register(LPM3_bits + GIE);     // Enter LPM0 w/ interrupts
-        Data[(Size-1) - counterSize] = UCB0RXBUF;
+        Data[(Size-2) - counterSize] = UCB0RXBUF;
     }
 
-    UCB0CTLW0 |= UCTXSTP;                       // I2C stop condition
-    Data[Size-1] = UCB0RXBUF;
     __bis_SR_register(LPM3_bits + GIE);         // Enter LPM0 w/ interrupts
+    UCB0CTLW0 |= UCTXSTP;                       // I2C stop condition
+
+    Data[Size-2] = UCB0RXBUF;
+    __bis_SR_register(LPM3_bits + GIE);         // Enter LPM0 w/ interrupts
+
+    Data[Size-1] = UCB0RXBUF;
 
     UCB0IE |= UCSTPIE;
     __bis_SR_register(LPM3_bits + GIE);         // Enter LPM0 w/ interrupts
@@ -292,28 +299,28 @@ void M24LC512_ackPolling(void)
 {
     do
     {
-        UCB0IE |= UCTXIE0 | UCSTPIE | UCSTTIE;
-        UCB0IFG = 0x00;                        // clear I2C interrupt flags
-        UCB0CTLW0 |= UCTR;                     // I2CTRX=1 => Transmit Mode (R/W bit = 0)
+        UCB0IE |= UCTXIE0 | UCSTPIE;
+        UCB0IFG = 0x00;                         // clear I2C interrupt flags
+        UCB0CTLW0 |= UCTR;                      // I2CTRX=1 => Transmit Mode (R/W bit = 0)
         UCB0CTLW0 &= ~UCTXSTT;
-        UCB0CTLW0 |= UCTXSTT;                  // start condition is generated
+        UCB0CTLW0 |= UCTXSTT;                   // start condition is generated
 
-        while(UCB0CTLW0 & UCTXSTT)             // wait till I2CSTT bit was cleared
+        while(UCB0CTLW0 & UCTXSTT)                  // wait till I2CSTT bit was cleared
         {
-            if(!(UCNACKIFG & UCB0IFG))           // Break out if ACK received
+            if(!(UCNACKIFG & UCB0IFG))          // Break out if ACK received
                 break;
         }
 
         UCB0CTLW0 |= UCTXSTP;                   // stop condition is generated after. Wait till stop bit is reset
         __bis_SR_register(LPM3_bits + GIE);     // Enter LPM0 w/ interrupts
 
-        UCB0IE &= ~(UCTXIE0 | UCSTPIE | UCSTTIE);
+        UCB0IE &= ~(UCTXIE0 | UCSTPIE);
 
-        __delay_cycles(1000);                          // delay
+        __delay_cycles(1000);                   // delay
 
     } while(UCNACKIFG & UCB0IFG);
 
-    UCB0IFG &= ~(UCTXIFG0 | UCSTTIFG | UCSTPIFG);
+    UCB0IFG &= ~(UCTXIFG0 | UCSTPIFG);
 }
 //**********************************************************************************************************************************************************//**********************************************************************************************************************************************************
 void M24LC512_setinitValueHeader(void)
@@ -357,8 +364,8 @@ void M24LC512_updateHeader(const uint16_t currentAddress, const uint16_t size)
         if(countS > count)
         {
             // Actualizo la cantidad de sobreescrituras (aprox. cada 7 dias) - count
-            myArray[13] = ((uint8_t)(countS >> 8));  // Parte alta
-            myArray[14] = (uint8_t)countS;           // Parte baja
+            myArray[13] = ((uint8_t)(countS >> 8));     // Parte alta
+            myArray[14] = (uint8_t)countS;              // Parte baja
         }
 
         // Verifica que si se han perdido datos.
@@ -419,7 +426,7 @@ bool M24LC512_memoryCheck(void)
 
     do
     {
-        UCB0IE |= UCTXIE0 | UCSTPIE | UCSTTIE;
+        UCB0IE |= UCTXIE0 | UCSTPIE;
         UCB0IFG = 0x00;                        // clear I2C interrupt flags
         UCB0CTLW0 |= UCTR;                     // I2CTRX=1 => Transmit Mode (R/W bit = 0)
         UCB0CTLW0 &= ~UCTXSTT;
@@ -473,8 +480,8 @@ bool M24LC512_memoryCheck(void)
     }else if((contDo == 0 && (UCNACKIFG & UCB0IFG) && !(UCTXSTT & UCB0CTLW0) && (UCTXIFG0 & UCB0IFG)) ||
              (contDo != 0 && !(UCNACKIFG & UCB0IFG) && (UCTXSTT & UCB0CTLW0) && !(UCTXIFG0 & UCB0IFG)))
     {
-        UCB0IE &= ~(UCTXIE0 | UCSTPIE | UCSTTIE);
-        UCB0IFG &= ~(UCTXIFG0 | UCSTTIFG | UCSTPIFG);
+        UCB0IE &= ~(UCTXIE0 | UCSTPIE);
+        UCB0IFG &= ~(UCTXIFG0 | UCSTPIFG);
         UCB0CTLW0 &= ~UCTXSTT;
 
         SYSCFG0 &= ~DFWP;

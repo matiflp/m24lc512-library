@@ -8,14 +8,17 @@ int main(void)
     myArray = (uint8_t *) 0x1800;               // Start of FRAM block of 512 bytes
 
     uint8_t i = 0;
-    uint16_t addr = 0;
+    uint16_t addr = 0, addr1 = 0;
     volatile uint8_t data[6];
 
     WDTCTL = WDTPW + WDTHOLD;                   // Stop watchdog timer
 
     M24LC512_initPort();                        // Initialize I2C module
 
-    M24LC512_byteWrite(0xF9FF,0x88);
+    // Desabilita el modo de alta impedancia habilitando la configuración establecida previamente.
+    PM5CTL0 &= ~LOCKLPM5;
+
+    M24LC512_byteWrite(0xF9FF,0x85);
     M24LC512_ackPolling();                      // Wait for EEPROM write cycle
                                                 // completion
     M24LC512_byteWrite(0xFA00,0x96);
@@ -30,7 +33,7 @@ int main(void)
     M24LC512_byteWrite(0xFA03,0x9B);
     M24LC512_ackPolling();                      // Wait for EEPROM write cycle
                                                 // completion
-    M24LC512_byteWrite(0xFA04,0xBA);
+    M24LC512_byteWrite(0xFA04,0xBB);
     M24LC512_ackPolling();                      // Wait for EEPROM write cycle
                                                 // completion
 
@@ -39,7 +42,7 @@ int main(void)
     data[2] = M24LC512_currentRead();           // Read from address 0xFA01
     data[3] = M24LC512_currentRead();           // Read from address 0xFA02
     data[4] = M24LC512_currentRead();           // Read from address 0xFA03
-    data[5] = M24LC512_currentRead();           // Read from address 0xFA04*/
+    data[5] = M24LC512_currentRead();           // Read from address 0xFA04
 
     // Fill write_val array with counter values
     for(i = 0 ; i < 60 ; i++)
@@ -47,11 +50,13 @@ int main(void)
         write_val[i] = i;
     }
 
-    addr = 0x0064;                              // Set starting address
-      // Write a sequence of data array
-    M24LC512_pageWrite(&addr , write_val , 60);
-    // Read out a sequence of data from EEPROM
-    //M24LC512_sequentialRead(addr, read_val , 60);
+    if(M24LC512_memoryCheck())
+    {
+        // Write a sequence of data array
+        M24LC512_pageWrite(&addr , write_val , 60);
+        // Read out a sequence of data from EEPROM
+        M24LC512_sequentialRead(addr1, read_val , 60);
+    }
 
     __no_operation();
     while(1);

@@ -1,10 +1,10 @@
 ******************************************************************************
                   MSP430 Linker PC v20.2.2                     
 ******************************************************************************
->> Linked Wed Jan 20 17:17:26 2021
+>> Linked Sat Jan 23 22:32:41 2021
 
 OUTPUT FILE NAME:   <m24lc512-library-v3.out>
-ENTRY POINT SYMBOL: "_c_int00_noargs"  address: 0000ca06
+ENTRY POINT SYMBOL: "_c_int00_noargs"  address: 0000ca34
 
 
 MEMORY CONFIGURATION
@@ -16,7 +16,7 @@ MEMORY CONFIGURATION
   PERIPHERALS_16BIT     00000100   00000100  00000000  00000100  RWIX
   INFOA                 00001800   00000200  00000000  00000200  RWIX
   RAM                   00002000   00000800  0000011e  000006e2  RWIX
-  FRAM                  0000c400   00003b80  00000636  0000354a  RWIX
+  FRAM                  0000c400   00003b80  00000664  0000351c  RWIX
   JTAGSIGNATURE         0000ff80   00000004  00000004  00000000  RWIX  ffff 
   BSLSIGNATURE          0000ff84   00000004  00000004  00000000  RWIX  ffff 
   INT00                 0000ff88   00000002  00000000  00000002  RWIX
@@ -109,7 +109,7 @@ section   page    origin      length       input sections
 
 .const     0    0000c412    00000000     UNINITIALIZED
 
-.text      0    0000c412    00000624     
+.text      0    0000c412    00000652     
                   0000c412    00000186     memory.obj (.text:M24LC512_pageWrite)
                   0000c598    000000f6     main.obj (.text:main)
                   0000c68e    000000b2     memory.obj (.text:M24LC512_sequentialRead)
@@ -119,14 +119,15 @@ section   page    origin      length       input sections
                   0000c8aa    00000054     memory.obj (.text:M24LC512_currentRead)
                   0000c8fe    00000054     rts430x_lc_rd_eabi.lib : autoinit.c.obj (.text:__TI_auto_init_nobinit_nopinit_hold_wdt:__TI_auto_init_nobinit_nopinit_hold_wdt)
                   0000c952    00000052     memory.obj (.text:M24LC512_initPort)
-                  0000c9a4    00000024     rts430x_lc_rd_eabi.lib : copy_zero_init.c.obj (.text:decompress:ZI:__TI_zero_init_nomemset:__TI_zero_init_nomemset)
-                  0000c9c8    00000020     memory.obj (.text:M24LC512_initRead)
-                  0000c9e8    0000001e     memory.obj (.text:M24LC512_initWrite)
-                  0000ca06    0000001c     rts430x_lc_rd_eabi.lib : boot.c.obj (.text:_isr:_c_int00_noargs)
-                  0000ca22    00000008                            : isr_trap.asm.obj (.text:_isr:__TI_ISR_TRAP)
-                  0000ca2a    00000006                            : exit.c.obj (.text:abort)
-                  0000ca30    00000004                            : pre_init.c.obj (.text:_system_pre_init)
-                  0000ca34    00000002                            : startup.c.obj (.text:_system_post_cinit)
+                  0000c9a4    0000002e     memory.obj (.text:_isr:USCIB0_ISR)
+                  0000c9d2    00000024     rts430x_lc_rd_eabi.lib : copy_zero_init.c.obj (.text:decompress:ZI:__TI_zero_init_nomemset:__TI_zero_init_nomemset)
+                  0000c9f6    00000020     memory.obj (.text:M24LC512_initRead)
+                  0000ca16    0000001e     memory.obj (.text:M24LC512_initWrite)
+                  0000ca34    0000001c     rts430x_lc_rd_eabi.lib : boot.c.obj (.text:_isr:_c_int00_noargs)
+                  0000ca50    00000008                            : isr_trap.asm.obj (.text:_isr:__TI_ISR_TRAP)
+                  0000ca58    00000006                            : exit.c.obj (.text:abort)
+                  0000ca5e    00000004                            : pre_init.c.obj (.text:_system_pre_init)
+                  0000ca62    00000002                            : startup.c.obj (.text:_system_post_cinit)
 
 .bss       0    00002000    0000007e     UNINITIALIZED
                   00002000    0000003c     (.common:read_val)
@@ -151,7 +152,7 @@ ADC        0    0000ffe8    00000002
                   0000ffe8    00000002     rts430x_lc_rd_eabi.lib : int48.asm.obj (.int48)
 
 USCI_B0    0    0000ffea    00000002     
-                  0000ffea    00000002     rts430x_lc_rd_eabi.lib : int49.asm.obj (.int49)
+                  0000ffea    00000002     memory.obj (.int49)
 
 USCI_A0    0    0000ffec    00000002     
                   0000ffec    00000002     rts430x_lc_rd_eabi.lib : int50.asm.obj (.int50)
@@ -198,10 +199,10 @@ MODULE SUMMARY
        Module                 code   ro data   rw data
        ------                 ----   -------   -------
     .\
-       memory.obj             1158   0         6      
+       memory.obj             1204   2         6      
        main.obj               246    0         120    
     +--+----------------------+------+---------+---------+
-       Total:                 1404   0         126    
+       Total:                 1450   2         126    
                                                       
     C:\ti\ccs1011\ccs\tools\compiler\ti-cgt-msp430_20.2.2.LTS\lib\rts430x_lc_rd_eabi.lib
        autoinit.c.obj         84     0         0      
@@ -214,7 +215,6 @@ MODULE SUMMARY
        int46.asm.obj          0      2         0      
        int47.asm.obj          0      2         0      
        int48.asm.obj          0      2         0      
-       int49.asm.obj          0      2         0      
        int50.asm.obj          0      2         0      
        int51.asm.obj          0      2         0      
        int52.asm.obj          0      2         0      
@@ -226,12 +226,12 @@ MODULE SUMMARY
        int58.asm.obj          0      2         0      
        startup.c.obj          2      0         0      
     +--+----------------------+------+---------+---------+
-       Total:                 168    30        0      
+       Total:                 168    28        0      
                                                       
        Stack:                 0      0         160    
        Linker Generated:      0      18        0      
     +--+----------------------+------+---------+---------+
-       Grand Total:           1572   48        286    
+       Grand Total:           1618   48        286    
 
 
 LINKER GENERATED COPY TABLES
@@ -328,7 +328,7 @@ address   name
 00000672  BAKMEM9                                
 00000673  BAKMEM9_H                              
 00000672  BAKMEM9_L                              
-0000ca2a  C$$EXIT                                
+0000ca58  C$$EXIT                                
 000002ee  CAPTIO0CTL                             
 000002ef  CAPTIO0CTL_H                           
 000002ee  CAPTIO0CTL_L                           
@@ -762,6 +762,7 @@ address   name
 0000054e  UCB0TXBUF                              
 0000054f  UCB0TXBUF_H                            
 0000054e  UCB0TXBUF_L                            
+0000c9a4  USCIB0_ISR                             
 000001cc  WDTCTL                                 
 000001cd  WDTCTL_H                               
 000001cc  WDTCTL_L                               
@@ -771,7 +772,7 @@ address   name
 0000c412  __TI_CINIT_Limit                       
 0000c406  __TI_Handler_Table_Base                
 0000c40a  __TI_Handler_Table_Limit               
-0000ca22  __TI_ISR_TRAP                          
+0000ca50  __TI_ISR_TRAP                          
 0000c8fe  __TI_auto_init_nobinit_nopinit_hold_wdt
 0000ffe2  __TI_int45                             
 0000ffe4  __TI_int46                             
@@ -790,14 +791,14 @@ address   name
 ffffffff  __TI_pprof_out_hndl                    
 ffffffff  __TI_prof_data_size                    
 ffffffff  __TI_prof_data_start                   
-0000c9a4  __TI_zero_init_nomemset                
+0000c9d2  __TI_zero_init_nomemset                
 ffffffff  __c_args__                             
-0000ca06  _c_int00_noargs                        
+0000ca34  _c_int00_noargs                        
 0000fffe  _reset_vector                          
 00002760  _stack                                 
-0000ca34  _system_post_cinit                     
-0000ca30  _system_pre_init                       
-0000ca2a  abort                                  
+0000ca62  _system_post_cinit                     
+0000ca5e  _system_pre_init                       
+0000ca58  abort                                  
 0000207c  countS                                 
 0000c598  main                                   
 00002078  myArray                                
@@ -1336,13 +1337,14 @@ address   name
 0000c8aa  M24LC512_currentRead                   
 0000c8fe  __TI_auto_init_nobinit_nopinit_hold_wdt
 0000c952  M24LC512_initPort                      
-0000c9a4  __TI_zero_init_nomemset                
-0000ca06  _c_int00_noargs                        
-0000ca22  __TI_ISR_TRAP                          
-0000ca2a  C$$EXIT                                
-0000ca2a  abort                                  
-0000ca30  _system_pre_init                       
-0000ca34  _system_post_cinit                     
+0000c9a4  USCIB0_ISR                             
+0000c9d2  __TI_zero_init_nomemset                
+0000ca34  _c_int00_noargs                        
+0000ca50  __TI_ISR_TRAP                          
+0000ca58  C$$EXIT                                
+0000ca58  abort                                  
+0000ca5e  _system_pre_init                       
+0000ca62  _system_post_cinit                     
 0000ffe2  __TI_int45                             
 0000ffe4  __TI_int46                             
 0000ffe6  __TI_int47                             
@@ -1363,4 +1365,4 @@ ffffffff  __TI_prof_data_size
 ffffffff  __TI_prof_data_start                   
 ffffffff  __c_args__                             
 
-[553 symbols]
+[554 symbols]

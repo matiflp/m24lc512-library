@@ -186,19 +186,15 @@ unsigned char M24LC512_currentRead(void)
 {
     volatile uint8_t aux, temp;
 
+    // Read Data byte
     M24LC512_initRead();
 
     UCB0CTLW0 |= UCTXSTT;                       // I2C start condition
-    __bis_SR_register(LPM3_bits + GIE);         // Enter LPM0 w/ interrupts
-
     UCB0CTLW0 |= UCTXSTP;
-
     temp = UCB0RXBUF;
     __bis_SR_register(LPM3_bits + GIE);         // Enter LPM0 w/ interrupts
 
     UCB0IE |= UCSTPIE;
-
-    aux = UCB0RXBUF;
     __bis_SR_register(LPM3_bits + GIE);         // Enter LPM0 w/ interrupts
 
     UCB0IE &= ~(UCRXIE0 | UCSTPIE);
@@ -234,16 +230,11 @@ uint8_t M24LC512_randomRead(const uint16_t Address)
     M24LC512_initRead();
 
     UCB0CTLW0 |= UCTXSTT;                       // I2C start condition
-    __bis_SR_register(LPM3_bits + GIE);         // Enter LPM0 w/ interrupts
-
     UCB0CTLW0 |= UCTXSTP;
-
     temp = UCB0RXBUF;
     __bis_SR_register(LPM3_bits + GIE);         // Enter LPM0 w/ interrupts
 
     UCB0IE |= UCSTPIE;
-
-    aux = UCB0RXBUF;
     __bis_SR_register(LPM3_bits + GIE);         // Enter LPM0 w/ interrupts
 
     UCB0IE &= ~(UCRXIE0 | UCSTPIE);
@@ -288,11 +279,10 @@ void M24LC512_sequentialRead(uint16_t Address , uint8_t *Data , uint16_t Size)
     }
 
     UCB0CTLW0 |= UCTXSTP;                       // I2C stop condition
+    Data[Size-1] = UCB0RXBUF;
     __bis_SR_register(LPM3_bits + GIE);         // Enter LPM0 w/ interrupts
 
     UCB0IE |= UCSTPIE;
-
-    Data[Size-1] = UCB0RXBUF;
     __bis_SR_register(LPM3_bits + GIE);         // Enter LPM0 w/ interrupts
 
     UCB0IE &= ~(UCRXIE0 | UCSTPIE);
@@ -494,4 +484,44 @@ bool M24LC512_memoryCheck(void)
         return false;
     }
     return 0;
+}
+//********************************************************************************************************************************************************************
+// I2C interrupt service routine
+#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
+#pragma vector = USCI_B0_VECTOR
+__interrupt void USCIB0_ISR(void)
+#elif defined(__GNUC__)
+void __attribute__ ((interrupt(USCI_B0_VECTOR))) USCIB0_ISR (void)
+#else
+#error Compiler not supported!
+#endif
+{
+  switch(__even_in_range(UCB0IV, USCI_I2C_UCBIT9IFG))
+  {
+    case USCI_NONE:          break;         // Vector 0: No interrupts
+    case USCI_I2C_UCALIFG:   break;         // Vector 2: ALIFG
+    case USCI_I2C_UCNACKIFG: break;         // Vector 4: NACKIFG
+    case USCI_I2C_UCSTTIFG:                 // Vector 6: STTIFG
+    case USCI_I2C_UCSTPIFG:                 // Vector 8: STPIFG
+
+        __bic_SR_register_on_exit(LPM3_bits + GIE);
+        break;
+
+    case USCI_I2C_UCRXIFG3:  break;         // Vector 10: RXIFG3
+    case USCI_I2C_UCTXIFG3:  break;         // Vector 14: TXIFG3
+    case USCI_I2C_UCRXIFG2:  break;         // Vector 16: RXIFG2
+    case USCI_I2C_UCTXIFG2:  break;         // Vector 18: TXIFG2
+    case USCI_I2C_UCRXIFG1:  break;         // Vector 20: RXIFG1
+    case USCI_I2C_UCTXIFG1:  break;         // Vector 22: TXIFG1
+    case USCI_I2C_UCRXIFG0:                 // Vector 24: RXIFG0
+    case USCI_I2C_UCTXIFG0:                 // Vector 26: TXIFG0
+
+        __bic_SR_register_on_exit(LPM3_bits + GIE);
+        break;
+
+    case USCI_I2C_UCBCNTIFG: break;         // Vector 28: BCNTIFG
+    case USCI_I2C_UCCLTOIFG: break;         // Vector 30: clock low timeout
+    case USCI_I2C_UCBIT9IFG: break;         // Vector 32: 9th bit
+    default: break;
+  }
 }

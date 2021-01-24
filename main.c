@@ -9,7 +9,7 @@ int main(void)
 
     uint8_t i = 0;
     uint16_t addr = 0;
-    uint8_t data[6];
+    volatile uint8_t data[6];
 
     WDTCTL = WDTPW + WDTHOLD;                   // Stop watchdog timer
 
@@ -39,7 +39,7 @@ int main(void)
     data[2] = M24LC512_currentRead();           // Read from address 0xFA01
     data[3] = M24LC512_currentRead();           // Read from address 0xFA02
     data[4] = M24LC512_currentRead();           // Read from address 0xFA03
-    data[5] = M24LC512_currentRead();           // Read from address 0xFA04
+    data[5] = M24LC512_currentRead();           // Read from address 0xFA04*/
 
     // Fill write_val array with counter values
     for(i = 0 ; i < 60 ; i++)
@@ -51,7 +51,7 @@ int main(void)
       // Write a sequence of data array
     M24LC512_pageWrite(&addr , write_val , 60);
     // Read out a sequence of data from EEPROM
-    M24LC512_sequentialRead(addr, read_val , 60);
+    //M24LC512_sequentialRead(addr, read_val , 60);
 
     __no_operation();
     while(1);
